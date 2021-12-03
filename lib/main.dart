@@ -1,18 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/sentry_event.dart';
 import 'dart:developer' as developer;
+
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 bool get isInDebugMode {
   bool inDebugMode = false;
   return inDebugMode;
 }
 
-void main() {
+void main() async {
   FlutterError.onError = (FlutterErrorDetails details) async {
     final exception = details.exception;
     final stackTrace = details.stack;
-
     // if in debug mode dumb to console else forward it to zone to be forwarded  to your error reporting strategy
 
     if (isInDebugMode) {
@@ -24,17 +26,27 @@ void main() {
       }
     }
   };
+
   runZonedGuarded<Future<void>>(() async {
-    runApp(const MyApp());
+    // add sentry dsn
+    await SentryFlutter.init((options) {
+      options.dsn =
+          "https://52f62e63bf4646cb8e472bf635469c58@o510580.ingest.sentry.io/6092327";
+    }, appRunner: () => runApp(const MyApp()));
   }, (error, stackTrace) async {
     debugPrint("Caught dart error");
     if (isInDebugMode) {
       developer.log("Dart Error", error: error, stackTrace: stackTrace);
       debugPrint('$error');
       debugPrint('$stackTrace');
+      // for testing purpose only
+      final SentryEvent event = await getSentryEvent(error);
+      Sentry.captureEvent(event, stackTrace: stackTrace);
     } else {
       // report to a error tracking system in production
       // eg sentry or FirebaseCrashlytics
+      final SentryEvent event = await getSentryEvent(error);
+      Sentry.captureEvent(event, stackTrace: stackTrace);
     }
   });
 }
