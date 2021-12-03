@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'dart:developer' as developer;
 
 bool get isInDebugMode {
   bool inDebugMode = false;
@@ -16,6 +17,7 @@ void main() {
 
     if (isInDebugMode) {
       FlutterError.dumpErrorToConsole(details);
+      developer.log("Flutter Error", error: exception, stackTrace: stackTrace);
     } else {
       if (stackTrace != null) {
         Zone.current.handleUncaughtError(exception, stackTrace);
@@ -27,6 +29,7 @@ void main() {
   }, (error, stackTrace) async {
     debugPrint("Caught dart error");
     if (isInDebugMode) {
+      developer.log("Dart Error", error: error, stackTrace: stackTrace);
       debugPrint('$error');
       debugPrint('$stackTrace');
     } else {
